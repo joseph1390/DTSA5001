@@ -1,0 +1,507 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Problem 1"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The Birthday Problem: This is a classic problem that has a nonintuitive answer. Suppose there are 𝑁 students in a room."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Part a)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We wish to figure out the probability that at least two of them have the same birthday (month and day)?  (Assume that each day is equally likely to be a student's birthday, that there are no sets of twins, and that there are 365 days in the year. Do not include leap years)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "\"At least two\" with the same birthday could mean that exactly two students have the same birthday and all other students have birthdays different from each other and different from that one shared birthday. It could mean that two students share one birthday and two students share a different birthday and all other students have birthdays different from each other and different from either of those shared birthdays. It could mean that three students share one birthday and two students share a different birthday and all other students... this is getting difficult!"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "When we need to compute the probability of an event describes as \"at least\" (for example \"at least one\" or \"at least two\"), it is almost always easier to consider the complement of the event. Indeed, we have that\n",
+    "\n",
+    "$$P(\\text{at least two share a birthday}) = 1-P(\\text{none share a birthday})$$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Before solving this problem analytically, let's try to approach this via simulation using R! In the next cell, we will set $N$ to be 10 and sample birthdays for $N$ people. For simulation, considering the complement of the event will not be particularly advantageous so we will just approach the problem directly. Run the next cell to simulate 10 birthdays."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<style>\n",
+       ".list-inline {list-style: none; margin:0; padding: 0}\n",
+       ".list-inline>li {display: inline-block}\n",
+       ".list-inline>li:not(:last-child)::after {content: \"\\00b7\"; padding: 0 .5ex}\n",
+       "</style>\n",
+       "<ol class=list-inline><li>268</li><li>149</li><li>174</li><li>200</li><li>41</li><li>112</li><li>257</li><li>324</li><li>118</li><li>217</li></ol>\n"
+      ],
+      "text/latex": [
+       "\\begin{enumerate*}\n",
+       "\\item 268\n",
+       "\\item 149\n",
+       "\\item 174\n",
+       "\\item 200\n",
+       "\\item 41\n",
+       "\\item 112\n",
+       "\\item 257\n",
+       "\\item 324\n",
+       "\\item 118\n",
+       "\\item 217\n",
+       "\\end{enumerate*}\n"
+      ],
+      "text/markdown": [
+       "1. 268\n",
+       "2. 149\n",
+       "3. 174\n",
+       "4. 200\n",
+       "5. 41\n",
+       "6. 112\n",
+       "7. 257\n",
+       "8. 324\n",
+       "9. 118\n",
+       "10. 217\n",
+       "\n",
+       "\n"
+      ],
+      "text/plain": [
+       " [1] 268 149 174 200  41 112 257 324 118 217"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Run this cell\n",
+    "N = 10\n",
+    "birthdays = sample(1:365, size=N, replace = TRUE)\n",
+    "birthdays"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Are there any shared birthdays here? Typing `unique(birthdays)` will list all of the unique elements of the vector birthdays. If the length of this vector is shorter than the length of the original vector, we know that there is at least one duplicate."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "FALSE"
+      ],
+      "text/latex": [
+       "FALSE"
+      ],
+      "text/markdown": [
+       "FALSE"
+      ],
+      "text/plain": [
+       "[1] FALSE"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Run this cell\n",
+    "share = FALSE\n",
+    "if(length(unique(birthdays)) < length(birthdays)) \n",
+    "{\n",
+    "  share = TRUE\n",
+    "}\n",
+    "share"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "To see probability \"in action\", we will repeat our experiment many times!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "0.1176"
+      ],
+      "text/latex": [
+       "0.1176"
+      ],
+      "text/markdown": [
+       "0.1176"
+      ],
+      "text/plain": [
+       "[1] 0.1176"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Number of repetitions of our simulated experiment\n",
+    "numreps = 100000\n",
+    "\n",
+    "# Inititalize a Boolean vector with all FALSE values\n",
+    "share = rep(FALSE,numreps)\n",
+    "\n",
+    "# Start the simulation\n",
+    "for(i in 1:numreps)\n",
+    "{\n",
+    "   birthdays = sample(1:365, size=N, replace = TRUE)\n",
+    "   if(length(unique(birthdays)) < length(birthdays)) \n",
+    "   {\n",
+    "      share[i] = TRUE\n",
+    "   }\n",
+    "}\n",
+    "\n",
+    "\n",
+    "# When R sums a vector of booleans (TRUE or FALSE) it is treating TRUE as 1 and FALSE as 0.\n",
+    "# So, `sum(share)` will give the total number of \"TRUE\"s\n",
+    "\n",
+    "sum(share)/numreps  #proportion of runs that have duplicate birthdays"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Run the cell above several times. Do you see a lot of variability in the answer? If you roll a fair six-sided die 5 times, do you really think that you will see a 3 $1/6$ of the time? To get a good estimate of that $1/6$ probability, you need to roll the die a lot! \n",
+    "\n",
+    "Increase \"numreps\" to 100,000 and run it several times again. (Note: R is very slow at \"looping\" so each run may take a moment. There are more efficient ways to code the simulation in R but we are using the loop as, arguably, the most straightforward method for clarity.)\n",
+    "\n",
+    "With each run at the higher number of reps, your estimate should be more consistent."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<hr>\n",
+    "We now challenge you to work out the probability \n",
+    "\n",
+    "$$P(\\text{at least two share a birthday}) = 1-P(\\text{none share a birthday})$$\n",
+    "\n",
+    "on paper for a general $N$. If you need to look up the solution in a book or on the internet, make sure you read it carefully until you understand it. Although this is an \"ungraded lab\", skipping this challenge can hurt you as this course progresses!\n",
+    "\n",
+    "In the next cell, use R to work out the value of your analytical solution in the case that $N=10$. Does it match (approximately) the answer you arrived at via simulation?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[1] 0.1169482\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Your code here\n",
+    "\n",
+    "mult = 1\n",
+    "for(n in 1:10)\n",
+    "{\n",
+    "   mult = mult * ((365 - n + 1)/365)\n",
+    "}\n",
+    "\n",
+    "print(1-mult)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Part b)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Copy your code form the previous cell into the next cell. Alter it to determine, through trial-and-error, how  large $N$ must be so that the probability that at least two of them have the same birthday is at least 1/2? Answer this through trial and error by using R to evaluate your analytical solution for various values of $N$. \n",
+    "\n",
+    "(Make sure you can get the given answer!)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[1] 0.5072972\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Your code here: The answer is 23 !!!\n",
+    "\n",
+    "mult = 1\n",
+    "for(n in 1:23)\n",
+    "{\n",
+    "   mult = mult * ((365 - n + 1)/365)\n",
+    "}\n",
+    "\n",
+    "print(1-mult)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Part c)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For $N=1,2,\\ldots, 40$, we want to plot $N$ (the number of students) on the $x$-axis versus the probability that at least two of them have the same birthday\n",
+    "on the $y$-axis. Fill in the missing code."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "iVBORw0KGgoAAAANSUhEUgAAA0gAAANICAMAAADKOT/pAAADAFBMVEUAAAABAQECAgIDAwME\nBAQFBQUGBgYHBwcICAgJCQkKCgoLCwsMDAwNDQ0ODg4PDw8QEBARERESEhITExMUFBQVFRUW\nFhYXFxcYGBgZGRkaGhobGxscHBwdHR0eHh4fHx8gICAhISEiIiIjIyMkJCQlJSUmJiYnJyco\nKCgpKSkqKiorKyssLCwtLS0uLi4vLy8wMDAxMTEyMjIzMzM0NDQ1NTU2NjY3Nzc4ODg5OTk6\nOjo7Ozs8PDw9PT0+Pj4/Pz9AQEBBQUFCQkJDQ0NERERFRUVGRkZHR0dISEhJSUlKSkpLS0tM\nTExNTU1OTk5PT09QUFBRUVFSUlJTU1NUVFRVVVVWVlZXV1dYWFhZWVlaWlpbW1tcXFxdXV1e\nXl5fX19gYGBhYWFiYmJjY2NkZGRlZWVmZmZnZ2doaGhpaWlqampra2tsbGxtbW1ubm5vb29w\ncHBxcXFycnJzc3N0dHR1dXV2dnZ3d3d4eHh5eXl6enp7e3t8fHx9fX1+fn5/f3+AgICBgYGC\ngoKDg4OEhISFhYWGhoaHh4eIiIiJiYmKioqLi4uMjIyNjY2Ojo6Pj4+QkJCRkZGSkpKTk5OU\nlJSVlZWWlpaXl5eYmJiZmZmampqbm5ucnJydnZ2enp6fn5+goKChoaGioqKjo6OkpKSlpaWm\npqanp6eoqKipqamqqqqrq6usrKytra2urq6vr6+wsLCxsbGysrKzs7O0tLS1tbW2tra3t7e4\nuLi5ubm6urq7u7u8vLy9vb2+vr6/v7/AwMDBwcHCwsLDw8PExMTFxcXGxsbHx8fIyMjJycnK\nysrLy8vMzMzNzc3Ozs7Pz8/Q0NDR0dHS0tLT09PU1NTV1dXW1tbX19fY2NjZ2dna2trb29vc\n3Nzd3d3e3t7f39/g4ODh4eHi4uLj4+Pk5OTl5eXm5ubn5+fo6Ojp6enq6urr6+vs7Ozt7e3u\n7u7v7+/w8PDx8fHy8vLz8/P09PT19fX29vb39/f4+Pj5+fn6+vr7+/v8/Pz9/f3+/v7////i\nsF19AAAACXBIWXMAABJ0AAASdAHeZh94AAAgAElEQVR4nO3dCZxNdf/A8d/MncWMnYhso/K0\nR0QqROPJluQhSyoipSiVSosiJUWPVi3qX0pamfbleaTdlkHoKRoiaqSYiTCWmXv/c+85Yyzj\nzNw533t+59z7eb9eze9n5sw931d8XrPce89VAQC2Kd0DANGAkAABhAQIICRAACEBAggJEEBI\ngABCAgQQEiCAkAABhAQIICRAACEBAggJEEBIgABCAgQQEiCAkAABhAQIICRAACEBAggJEEBI\ngABCAgQQEiCAkAABhAQIICRAACEBAggJEEBIgABCAgQQEiCAkAABhAQIICRAACEBAggJEEBI\ngABCAgQQEiCAkAABhAQIICRAACEBAggJEEBIgABCAgQQEiCAkAABhAQIICRAACEBAggJEEBI\ngABCAgQQEiCAkAABhAQIICRAACEBAggJEEBIgABCAgQQEiCAkAABhAQIICRAACEBAggJEEBI\ngABCAgQQEiCAkAABhAQIICRAACEBAggJEEBIgABCAgQQEiCAkAABhAQIICRAACEBAggJEEBI\ngABCAgQQEiCAkAABhAQIICRAACEBAggJEEBIgABCAgQ4ENJ3mYCnfBf+v/LIh7RYAR6zOOx/\n5pEPaZ7aE/FzAIL2qHlhfw4hAYcgJEAAIQECCAkQQEiAAEICBBASIICQAAGEBAggJEAAIQEC\nCAkQQEiAAEICBBASIICQAAGEBJTV8tFdu45eXuKHCAkoo4m+drfe2s43saSPERJQNm8lZQSX\njKRZJXyQkICyOeMWY72leQkfJCSgTP5WC4zN/Lgdh3+UkIAyyVarjc0qlX34RwkJKJO9FT40\nNh9U2Hv4RwkJKJteF/iDS8E/e5XwQUICjuTvr16c8+f+P62qeummQGDTpVVXl3AoIQFH8EjV\nhLTkpJt2F/15yakqLU2duqSkYwkJKNkDqc/kBfa9V7f//vcULJk+PbOgxIMJCShRdvJrofW7\nhM/LcDQhASV6rr7f2HS5oQxHExJQorvPNzcjLy7D0YQElGhS0SOBBl5ehqMJCSjRPN/PoXVX\n3afLcDQhASXytztna+Gye0D9v8twNCEBRXZmzv29+E+bmh415MHhjY9ZWpZPJSTAsH1YkkpS\nZxXf37r7uQGte0/KKdMnExIQsufsJu9v27e8X8XMcn02IQFBj9baFFr7tyzPZxMSENJ6jLH+\nqNaU47MJCQip/Yax+pP+W47PJiQgpOGLxro7/qtyfDYhASG9+xrre8nbyvHZhASEfOV7M7j8\netyw8nw2IQGGf/v+9diLN1Y/r4RrBJWOkBCz8r569q0Df0O34PKmjbo+u69ct0VIiFVv1E44\n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\nQmCC",
+      "text/plain": [
+       "plot without title"
+      ]
+     },
+     "metadata": {
+      "image/png": {
+       "height": 420,
+       "width": 420
+      },
+      "text/plain": {
+       "height": 420,
+       "width": 420
+      }
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Your code here\n",
+    "\n",
+    "N = 1:40\n",
+    "the.probability = rep(0,40)\n",
+    "mul = 1\n",
+    "\n",
+    "for(i in 1:40)\n",
+    "{\n",
+    "   # Your code here\n",
+    "   mul = mul * ((365 - i + 1)/365)\n",
+    "   \n",
+    "   the.probability[i] = 1 - mul\n",
+    "}\n",
+    "\n",
+    "plot(N,the.probability)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Problem 2 \n",
+    "\n",
+    "In this problem, we will use the sample generation skills from the previous problem to simulate dice rolls."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Part a)** \n",
+    "\n",
+    "Let $X$ be a random variable for the number rolled on a fair, six-sided die. Use the sample function (See Problem 1) to simulate $100$ values of $X$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Your code here\n",
+    "numrolls = 10000\n",
+    "x = sample(1:6,numrolls,replace=TRUE)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "x\n",
+       "   1    2    3    4    5    6 \n",
+       "1699 1618 1645 1684 1671 1683 "
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Run this cell to tabulate the counts for each outcome 1 through 6\n",
+    "table(x)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "x\n",
+       "     1      2      3      4      5      6 \n",
+       "0.1699 0.1618 0.1645 0.1684 0.1671 0.1683 "
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Run this cell to get the proportions\n",
+    "table(x)/numrolls"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Do you see what you expected to see? Run the previous three cells again with different values of \"numrolls\" to get more accurate results."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Part b)** \n",
+    "\n",
+    "Consider rolling <u>two</u> fair six-sided dice. What is the probability that the sum of the results is greater than or equal to 5? Work out the exact result by hand and then run a simulation to answer the question in the next cell. Compare your answers-- check your analytical solution and code until you can get them to match! "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "0.851"
+      ],
+      "text/latex": [
+       "0.851"
+      ],
+      "text/markdown": [
+       "0.851"
+      ],
+      "text/plain": [
+       "[1] 0.851"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Your code here\n",
+    "\n",
+    "num = 1000\n",
+    "d1 = sample(1:6, num, replace=TRUE)\n",
+    "d2 = sample(1:6, num, replace=TRUE)\n",
+    "share = rep(FALSE,num)\n",
+    "\n",
+    "for(i in 1:num)\n",
+    "{\n",
+    "    if(d1[i]+d2[i] >= 5)\n",
+    "    {\n",
+    "        share[i]=TRUE\n",
+    "    }\n",
+    "}\n",
+    "\n",
+    "sum(share)/num"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "R",
+   "language": "R",
+   "name": "ir"
+  },
+  "language_info": {
+   "codemirror_mode": "r",
+   "file_extension": ".r",
+   "mimetype": "text/x-r-source",
+   "name": "R",
+   "pygments_lexer": "r",
+   "version": "3.6.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
